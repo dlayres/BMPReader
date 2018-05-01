@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class ImagePanel extends JPanel{
@@ -16,8 +17,12 @@ public class ImagePanel extends JPanel{
 	public int height = 1;
 	public int res = 5;
 	
+	public ImagePanel(ImagePanel panel) {
+		
+	}
+	
 	public ImagePanel() {
-		Path path = Paths.get("FLAG_B24.bmp");
+		Path path = Paths.get("MARBLES.bmp");
 		try {
 			
 			byte[] fileContents =  Files.readAllBytes(path);
@@ -40,30 +45,29 @@ public class ImagePanel extends JPanel{
 			height = BMPReader.hexToInt(hexContents[25] + hexContents[24] + hexContents[23] + hexContents[22]);
 			
 			
-			pixelColors = new Color[(fileLength - offset + 3) / 3];
-			
-			//System.out.println((fileLength - offset) / 3 + " " + width * height);
+			pixelColors = new Color[width * height];
 			
 			if(((fileLength - offset) / 3) > (width * height)) {
-				int jOffset = 0;
-				boolean justOffset = false;
+				int index = 0;
 				for(int i = 0; i < ((fileLength - offset) / 3); i++) {
-					if(((i - jOffset) % 51 == 0) && (i != 0) && (justOffset == false)) {
-						jOffset++;
-						justOffset = true;
+					if(i % width == 0 && (i != 0)) {
 						continue;
 					}
-					pixelColors[i - jOffset] = new Color(BMPReader.hexToInt(hexContents[(i * 3) + offset + 2]), BMPReader.hexToInt(hexContents[(i * 3) + offset + 1]), BMPReader.hexToInt(hexContents[(i * 3) + offset]));
-					justOffset = false;
+					else {
+						pixelColors[index] = new Color(BMPReader.hexToInt(hexContents[(i * 3) + offset + 2]), BMPReader.hexToInt(hexContents[(i * 3) + offset + 1]), BMPReader.hexToInt(hexContents[(i * 3) + offset]));
+						index++;
+					}
 				}
 			}
 			else {
+				pixelColors = new Color[(fileLength - offset) / 3];
 				for(int i = 0; i < ((fileLength - offset) / 3); i++) {
 					pixelColors[i] = new Color(BMPReader.hexToInt(hexContents[(i * 3) + offset + 2]), BMPReader.hexToInt(hexContents[(i * 3) + offset + 1]), BMPReader.hexToInt(hexContents[(i * 3) + offset]));
 				}
 			}
 			
-
+			//int j = 1419;
+			//System.out.println(pixelColors[j].getRed() + " " + pixelColors[j].getGreen() + " " + pixelColors[j].getBlue());
 			
 			setSize(width * res, height * res);
 			
