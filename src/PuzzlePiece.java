@@ -12,6 +12,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 public class PuzzlePiece extends JPanel implements MouseListener{
@@ -22,19 +23,14 @@ public class PuzzlePiece extends JPanel implements MouseListener{
 	public int width;
 	public int height;
 	public boolean moving = false;
-
-	public PuzzlePiece(BufferedImage buffImg) {
-		addMouseListener(this);
-		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		setBorder(new EmptyBorder(0, 0, 0, 0));
-		setBackground(new Color(0,0,0,0));
-		bfdImg = buffImg;
-		width = buffImg.getWidth();
-		height = buffImg.getHeight();
-		pieceIcon = new JLabel(new ImageIcon(buffImg));
-		add(pieceIcon);
-		repaint();
-	}
+	PuzzlePiece leftNeighbor;
+	PuzzlePiece rightNeighbor;
+	PuzzlePiece upNeighbor;
+	PuzzlePiece downNeighbor;
+	boolean leftConnected = false;
+	boolean rightConnected = false;
+	boolean upConnected = false;
+	boolean downConnected = false;
 	
 	public PuzzlePiece(ImagePanel imgPanel) {
 		width = imgPanel.width;
@@ -51,111 +47,17 @@ public class PuzzlePiece extends JPanel implements MouseListener{
 				int colorsJ = imgPanel.height - j - 1;
 				int rgb = pix[colorsJ * imgPanel.width + colorsI].getRGB();
 				bfdImg.setRGB(i, j, rgb);
+				BMPReader.progressBar.setIndeterminate(false);
+				SwingUtilities.invokeLater(new Runnable(){
+					@Override public void run(){BMPReader.progressBar.setValue((int)Math.ceil(100 * (BMPReader.tasksDone / ((double)(BMPReader.tasks)))));}
+				});
+				BMPReader.tasksDone++;
 			}
 		}
 		pieceIcon = new JLabel(new ImageIcon(bfdImg));
 		add(pieceIcon);
 		repaint();
 	}
-
-
-	public PuzzlePiece combine(PuzzlePiece other, String direction) {
-		BufferedImage newImg = null;
-		if(direction.equals("left") || direction.equals("right")) {
-			newImg = new BufferedImage(this.width + other.width, Math.max(this.height, other.height), BufferedImage.TYPE_INT_ARGB);
-			for(int i = 0; i < newImg.getWidth(); i++) {
-				for(int j = 0; j < newImg.getHeight(); j++) {
-					newImg.setRGB(i, j, 0);
-				}
-			}
-			if(direction.equals("left")) {
-				for(int i = 0; i < other.width; i++) {
-					for(int j = 0; j < other.height; j++) {
-						int rgb = other.bfdImg.getRGB(i, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-				for(int i = other.width; i < other.width + this.width; i++) {
-					for(int j = 0; j < this.height; j++) {
-						int rgb = this.bfdImg.getRGB(i - other.width, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-			}
-			else {
-				for(int i = 0; i < this.width; i++) {
-					for(int j = 0; j < this.height; j++) {
-						int rgb = this.bfdImg.getRGB(i, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-				for(int i = this.width; i < this.width + other.width; i++) {
-					for(int j = 0; j < other.height; j++) {
-						int rgb = other.bfdImg.getRGB(i - this.width, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-			}
-		}
-		else {
-			newImg = new BufferedImage(Math.max(this.width, other.width), this.height + other.height, BufferedImage.TYPE_INT_ARGB);
-			for(int i = 0; i < newImg.getWidth(); i++) {
-				for(int j = 0; j < newImg.getHeight(); j++) {
-					newImg.setRGB(i, j, 0);
-				}
-			}
-			if(direction.equals("up")) {
-				for(int i = 0; i < other.width; i++) {
-					for(int j = 0; j < other.height; j++) {
-						int rgb = other.bfdImg.getRGB(i, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-				for(int i = 0; i < this.width; i++) {
-					for(int j = other.height; j < other.height + this.height; j++) {
-						int rgb = this.bfdImg.getRGB(i, j - other.height);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-			}
-			else {
-				for(int i = 0; i < this.width; i++) {
-					for(int j = 0; j < this.height; j++) {
-						int rgb = this.bfdImg.getRGB(i, j);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-				for(int i = 0; i < other.width; i++) {
-					for(int j = this.height; j < this.height + other.height; j++) {
-						int rgb = other.bfdImg.getRGB(i, j - this.height);
-						newImg.setRGB(i, j, rgb);
-					}
-				}
-			}
-		}
-		
-		PuzzlePiece  pzlPiece = new PuzzlePiece(newImg);
-		return pzlPiece;
-	}
-
-
-
-
-
-
-
-
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-//		Graphics2D g2 = bfdImg.createGraphics();
-//		g2.setColor(Color.BLUE);
-//		g2.fillRect(1, 1, 50, 50);
-	}
-
-
-
-
 
 
 
@@ -168,6 +70,7 @@ public class PuzzlePiece extends JPanel implements MouseListener{
 
 	@Override
 	public void mousePressed(MouseEvent e) {
+		BMPReader.me = e;
 		moving = true;	
 	}
 
